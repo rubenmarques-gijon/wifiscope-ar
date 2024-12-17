@@ -25,8 +25,8 @@ export function Toolbar({
   const [signalThreshold, setSignalThreshold] = useState([-70]);
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm p-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-      <div className="grid grid-cols-3 gap-2 md:flex md:gap-4">
+    <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm p-4 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+      <div className="grid grid-cols-3 gap-4 md:flex md:gap-4">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
