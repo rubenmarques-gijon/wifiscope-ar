@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Wifi, Radio, Signal, ArrowDownUp } from "lucide-react";
+import { Wifi, Radio, Signal, ArrowDownUp, AlertTriangle } from "lucide-react";
 import { Button } from "./ui/button";
 import {
   Sheet,
@@ -9,9 +9,12 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "./ui/sheet";
+import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
+import wifiService from "@/services/wifiService";
+import { toast } from "sonner";
 
 interface WifiAdapterInfoProps {
-  data: {
+  data?: {
     ssid: string;
     protocol: string;
     band: string;
@@ -19,15 +22,53 @@ interface WifiAdapterInfoProps {
   };
 }
 
-export function WifiAdapterInfo({ data }: WifiAdapterInfoProps) {
+export function WifiAdapterInfo({ data: initialData }: WifiAdapterInfoProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [data, setData] = useState(initialData);
+  const [error, setError] = useState<string | null>(null);
 
-  const infoItems = [
+  useEffect(() => {
+    async function updateAdapterInfo() {
+      try {
+        const adapterInfo = await wifiService.getAdapterInfo();
+        setData(adapterInfo);
+        setError(null);
+      } catch (err: any) {
+        setError(err.message);
+        toast.error(err.message, {
+          position: "top-left",
+          duration: Infinity,
+        });
+      }
+    }
+
+    // Actualizar información cada 5 segundos
+    updateAdapterInfo();
+    const interval = setInterval(updateAdapterInfo, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const infoItems = data ? [
     { icon: <Wifi className="w-4 h-4" />, label: "SSID", value: data.ssid },
     { icon: <Radio className="w-4 h-4" />, label: "Protocolo", value: data.protocol },
     { icon: <Signal className="w-4 h-4" />, label: "Banda", value: data.band },
     { icon: <ArrowDownUp className="w-4 h-4" />, label: "Velocidad", value: data.speed },
-  ];
+  ] : [];
+
+  if (error) {
+    return (
+      <div className="fixed top-4 left-4 right-4 z-50">
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Error de Conexión WiFi</AlertTitle>
+          <AlertDescription>
+            {error}
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
