@@ -9,7 +9,42 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      measurements: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          latency: number
+          location: Json
+          location_name: string
+          signal_strength: number
+          speed: number
+          timestamp: number
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          latency: number
+          location: Json
+          location_name: string
+          signal_strength: number
+          speed: number
+          timestamp: number
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          latency?: number
+          location?: Json
+          location_name?: string
+          signal_strength?: number
+          speed?: number
+          timestamp?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

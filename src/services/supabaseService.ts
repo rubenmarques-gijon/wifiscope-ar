@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { WifiMeasurement } from './wifiService';
+import { Database } from '@/integrations/supabase/types';
 
 export interface StoredMeasurement extends WifiMeasurement {
   id: string;
