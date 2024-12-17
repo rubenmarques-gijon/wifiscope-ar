@@ -31,7 +31,18 @@ class SupabaseService {
         return null;
       }
 
-      return data;
+      // Map the response back to our interface format
+      return {
+        id: data.id,
+        signalStrength: data.signal_strength,
+        speed: data.speed,
+        latency: data.latency,
+        location: data.location,
+        timestamp: data.timestamp,
+        client_id: data.client_id,
+        location_name: data.location_name,
+        created_at: data.created_at
+      };
     } catch (error) {
       console.error('Failed to store measurement:', error);
       return null;
@@ -51,7 +62,18 @@ class SupabaseService {
         return [];
       }
 
-      return data || [];
+      // Map each database record to our interface format
+      return (data || []).map(record => ({
+        id: record.id,
+        signalStrength: record.signal_strength,
+        speed: record.speed,
+        latency: record.latency,
+        location: record.location,
+        timestamp: record.timestamp,
+        client_id: record.client_id,
+        location_name: record.location_name,
+        created_at: record.created_at
+      }));
     } catch (error) {
       console.error('Failed to fetch measurements:', error);
       return [];
