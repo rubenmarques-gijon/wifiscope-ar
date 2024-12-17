@@ -31,13 +31,17 @@ class SupabaseService {
         return null;
       }
 
-      // Map the response back to our interface format
+      // Map the response back to our interface format and ensure location type
       return {
         id: data.id,
         signalStrength: data.signal_strength,
         speed: data.speed,
         latency: data.latency,
-        location: data.location,
+        location: {
+          x: (data.location as any).x || 0,
+          y: (data.location as any).y || 0,
+          z: (data.location as any).z || 0
+        },
         timestamp: data.timestamp,
         client_id: data.client_id,
         location_name: data.location_name,
@@ -62,13 +66,17 @@ class SupabaseService {
         return [];
       }
 
-      // Map each database record to our interface format
+      // Map each database record to our interface format and ensure location type
       return (data || []).map(record => ({
         id: record.id,
         signalStrength: record.signal_strength,
         speed: record.speed,
         latency: record.latency,
-        location: record.location,
+        location: {
+          x: (record.location as any).x || 0,
+          y: (record.location as any).y || 0,
+          z: (record.location as any).z || 0
+        },
         timestamp: record.timestamp,
         client_id: record.client_id,
         location_name: record.location_name,
