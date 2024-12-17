@@ -9,6 +9,7 @@ import wifiService from "@/services/wifiService";
 import supabaseService from "@/services/supabaseService";
 import { toast } from "sonner";
 import * as THREE from "three";
+import { useNavigate } from "react-router-dom";
 
 interface ClientInfo {
   documentType: string;
@@ -26,27 +27,33 @@ export function ARView() {
   const [signalThreshold, setSignalThreshold] = useState(-70);
   const [showComparison, setShowComparison] = useState(false);
   const [clientInfo, setClientInfo] = useState<ClientInfo | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    async function setupCamera() {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "environment" },
-        });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-      } catch (err) {
-        console.error("Error accessing camera:", err);
-        toast.error("No se pudo acceder a la cámara");
-      }
+    if (clientInfo) {
+      setupCamera();
     }
+  }, [clientInfo]);
 
+  async function setupCamera() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+      });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+    } catch (err) {
+      console.error("Error accessing camera:", err);
+      toast.error("No se pudo acceder a la cámara");
+    }
+  }
+
+  useEffect(() => {
     if (containerRef.current) {
       containerRef.current.appendChild(arService.getRenderer().domElement);
     }
-
-    setupCamera();
 
     function animate() {
       requestAnimationFrame(animate);
@@ -70,7 +77,6 @@ export function ARView() {
 
     const measurement = await wifiService.measureWifiQuality();
 
-    // In a real app, we would get the actual position from WebXR
     const position = new THREE.Vector3(
       Math.random() * 4 - 2,
       Math.random() * 4 - 2,
@@ -79,7 +85,6 @@ export function ARView() {
 
     arService.addMeasurementMarker(position, measurement);
 
-    // Store measurement in Supabase with client info
     await supabaseService.storeMeasurement(
       measurement,
       "Medición " + (wifiService.getMeasurements().length + 1),
@@ -122,17 +127,12 @@ export function ARView() {
         </div>
       )}
 
-      <ReportGenerator
-        measurements={wifiService.getMeasurements()}
-        onGenerateReport={() => {
-          console.log("Generating report...");
-          toast.success("Reporte generado exitosamente");
-        }}
-        onShareReport={() => {
-          console.log("Sharing report...");
-          toast.success("Reporte compartido exitosamente");
-        }}
-      />
+      <button
+        onClick={() => navigate("/reports")}
+        className="fixed top-4 right-4 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2"
+      >
+        <span className="hidden md:inline">Gestionar Informes</span>
+      </button>
 
       <Toolbar
         onMeasure={handleMeasure}
