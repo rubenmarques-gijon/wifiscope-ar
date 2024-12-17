@@ -29,15 +29,15 @@ export default {
           foreground: "#FFFFFF",
         },
         secondary: {
-          DEFAULT: "#34D399",
+          DEFAULT: "#34D399", // Verde esmeralda para buena señal
           foreground: "#FFFFFF",
         },
         warning: {
-          DEFAULT: "#FBBF24",
+          DEFAULT: "#FBBF24", // Amarillo ámbar para advertencia
           foreground: "#000000",
         },
         error: {
-          DEFAULT: "#DC2626",
+          DEFAULT: "#DC2626", // Rojo para error
           foreground: "#FFFFFF",
         },
         muted: {
