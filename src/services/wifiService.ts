@@ -1,7 +1,7 @@
 export interface WifiMeasurement {
-  signalStrength: number; // dBm
-  speed: number; // Mbps
-  latency: number; // ms
+  signalStrength: number;
+  speed: number;
+  latency: number;
   timestamp: number;
   location: {
     x: number;
@@ -15,6 +15,7 @@ class WifiService {
   private subscribers: ((measurement: WifiMeasurement) => void)[] = [];
   private connection: any;
   private isInitialized: boolean = false;
+  private connectionCheckInterval: NodeJS.Timer | null = null;
 
   constructor() {
     this.initializeNetworkInfo();
@@ -22,7 +23,7 @@ class WifiService {
 
   private async initializeNetworkInfo() {
     try {
-      // Verificar si hay conexión WiFi
+      // Verificar si hay conexión a Internet
       if (!navigator.onLine) {
         throw new Error("No hay conexión a Internet");
       }
@@ -31,19 +32,22 @@ class WifiService {
       this.connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
       
       if (!this.connection) {
-        throw new Error("La API NetworkInformation no está soportada en este navegador");
+        console.warn("La API NetworkInformation no está soportada en este navegador");
       }
 
       // Verificar si es una conexión WiFi
-      if (this.connection.type !== 'wifi') {
+      if (this.connection && this.connection.type !== 'wifi') {
         throw new Error("El dispositivo no está conectado a una red WiFi");
       }
 
       this.isInitialized = true;
+      this.startConnectionMonitoring();
       this.startRealTimeUpdates();
       
       // Monitorear cambios en la conexión
-      this.connection.addEventListener('change', this.handleConnectionChange.bind(this));
+      if (this.connection) {
+        this.connection.addEventListener('change', this.handleConnectionChange.bind(this));
+      }
       window.addEventListener('online', this.handleOnlineStatus.bind(this));
       window.addEventListener('offline', this.handleOnlineStatus.bind(this));
 
@@ -53,12 +57,31 @@ class WifiService {
     }
   }
 
-  private handleConnectionChange() {
-    // @ts-ignore
-    if (this.connection.type !== 'wifi') {
-      throw new Error("El dispositivo no está conectado a una red WiFi");
+  private startConnectionMonitoring() {
+    if (this.connectionCheckInterval) {
+      clearInterval(this.connectionCheckInterval);
     }
-    this.startRealTimeUpdates();
+
+    this.connectionCheckInterval = setInterval(() => {
+      if (!navigator.onLine) {
+        this.handleConnectionChange();
+      }
+    }, 5000); // Verificar cada 5 segundos
+  }
+
+  private handleConnectionChange() {
+    try {
+      if (!navigator.onLine) {
+        throw new Error("Se perdió la conexión a Internet");
+      }
+
+      if (this.connection && this.connection.type !== 'wifi') {
+        throw new Error("El dispositivo no está conectado a una red WiFi");
+      }
+    } catch (error: any) {
+      console.error('Connection change error:', error);
+      throw error;
+    }
   }
 
   private handleOnlineStatus() {
@@ -72,8 +95,12 @@ class WifiService {
 
     // Actualizar cada 2 segundos
     setInterval(async () => {
-      const measurement = await this.getRealWifiMeasurement();
-      this.notifySubscribers(measurement);
+      try {
+        const measurement = await this.getRealWifiMeasurement();
+        this.notifySubscribers(measurement);
+      } catch (error) {
+        console.error('Error updating WiFi measurements:', error);
+      }
     }, 2000);
   }
 
@@ -90,9 +117,9 @@ class WifiService {
 
       const measurement: WifiMeasurement = {
         // @ts-ignore - Accediendo a propiedades no estándar
-        signalStrength: this.connection.signalStrength || -65, // Valor aproximado si no está disponible
+        signalStrength: this.connection?.signalStrength || -65,
         // @ts-ignore
-        speed: this.connection.downlink || 0,
+        speed: this.connection?.downlink || 0,
         latency: Math.round(latency),
         timestamp: Date.now(),
         location: {
@@ -134,15 +161,6 @@ class WifiService {
     return this.measurements.filter(m => m.signalStrength >= minSignalStrength);
   }
 
-  public cleanup() {
-    if (this.connection) {
-      this.connection.removeEventListener('change', this.handleConnectionChange);
-    }
-    window.removeEventListener('online', this.handleOnlineStatus);
-    window.removeEventListener('offline', this.handleOnlineStatus);
-    this.subscribers = [];
-  }
-
   public async getAdapterInfo() {
     if (!this.isInitialized) {
       throw new Error("El servicio WiFi no está inicializado");
@@ -152,7 +170,6 @@ class WifiService {
       // @ts-ignore - Accediendo a propiedades no estándar del navegador
       const networkInfo = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
       
-      // Intentar obtener información del adaptador WiFi usando la API NetworkInformation
       return {
         ssid: await this.getSSID(),
         // @ts-ignore
@@ -171,20 +188,30 @@ class WifiService {
   private async getSSID(): Promise<string> {
     try {
       // Intentar obtener el SSID usando la API experimental Network Information
-      // @ts-ignore - API experimental
+      // @ts-ignore
       if (navigator.wifi && navigator.wifi.getCurrentNetwork) {
         // @ts-ignore
         const network = await navigator.wifi.getCurrentNetwork();
         return network.ssid;
       }
       
-      // Si no está disponible, intentar obtener mediante una solicitud al backend
-      // Esto requeriría implementación adicional en el backend
       return "Red WiFi actual";
     } catch (error) {
       console.error('Error getting SSID:', error);
       return "Desconocido";
     }
+  }
+
+  public cleanup() {
+    if (this.connection) {
+      this.connection.removeEventListener('change', this.handleConnectionChange);
+    }
+    window.removeEventListener('online', this.handleOnlineStatus);
+    window.removeEventListener('offline', this.handleOnlineStatus);
+    if (this.connectionCheckInterval) {
+      clearInterval(this.connectionCheckInterval);
+    }
+    this.subscribers = [];
   }
 }
 
