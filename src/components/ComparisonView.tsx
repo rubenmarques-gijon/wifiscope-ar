@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react';
 import { WifiMeasurement } from '@/services/wifiService';
-import { Chart } from '@/components/ui/chart';
 import {
-  Bar,
   BarChart,
   XAxis,
   YAxis,
   Tooltip,
   Legend,
-  ResponsiveContainer
+  ResponsiveContainer,
+  Bar
 } from 'recharts';
 
 interface ComparisonViewProps {
