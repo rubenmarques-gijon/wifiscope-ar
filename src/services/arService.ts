@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import { WifiMeasurement } from '@/types/wifi';
 import { ARScene } from './ar/scene';
 import { MarkerManager } from './ar/markers';
@@ -59,7 +60,7 @@ class ARService {
     return this.scene.getRenderer();
   }
 
-  public getLabelRenderer(): THREE.CSS2DRenderer {
+  public getLabelRenderer(): CSS2DRenderer {
     return this.scene.getLabelRenderer();
   }
 
