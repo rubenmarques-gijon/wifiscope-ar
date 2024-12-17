@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { WifiMeasurement } from "@/services/wifiService";
+import { WifiMeasurement } from "@/types/wifi";
 import { FileText, Share2 } from "lucide-react";
 import { toast } from "sonner";
 

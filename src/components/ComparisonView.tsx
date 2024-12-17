@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { WifiMeasurement } from '@/services/wifiService';
+import { WifiMeasurement } from '@/types/wifi';
 import {
   BarChart,
   XAxis,

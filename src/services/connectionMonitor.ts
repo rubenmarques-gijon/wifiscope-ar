@@ -16,7 +16,7 @@ class ConnectionMonitor {
 
       // Try to get network connection information
       this.connection = (
-        navigator.connection ||
+        (navigator as any).connection ||
         (navigator as any).mozConnection ||
         (navigator as any).webkitConnection ||
         null
@@ -72,8 +72,8 @@ class ConnectionMonitor {
     if (this.connection) {
       this.connection.removeEventListener('change', this.checkConnection);
     }
-    window.removeEventListener('online', this.checkConnection);
-    window.removeEventListener('offline', this.checkConnection);
+    window.removeEventListener('online', () => this.checkConnection());
+    window.removeEventListener('offline', () => this.checkConnection());
     if (this.connectionCheckInterval) {
       clearInterval(this.connectionCheckInterval);
     }

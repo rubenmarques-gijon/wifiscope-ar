@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { WifiMeasurement } from './wifiService';
+import { WifiMeasurement } from '@/types/wifi';
 import { Database } from '@/integrations/supabase/types';
 
 interface ClientInfo {
@@ -32,11 +32,7 @@ class SupabaseService {
           signal_strength: measurement.signalStrength,
           speed: measurement.speed,
           latency: measurement.latency,
-          location: {
-            x: measurement.location.x,
-            y: measurement.location.y,
-            z: measurement.location.z
-          },
+          location: measurement.location,
           timestamp: measurement.timestamp,
           location_name: locationName,
           client_id: clientId,

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { WifiMeasurement } from "@/services/wifiService";
+import { WifiMeasurement } from "@/types/wifi";
 import { MetricCard } from "./MetricCard";
 import { WifiAdapterInfo } from "./WifiAdapterInfo";
 import wifiService from "@/services/wifiService";
