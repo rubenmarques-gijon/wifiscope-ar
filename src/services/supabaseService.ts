@@ -1,8 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 import { WifiMeasurement } from './wifiService';
-
-const supabaseUrl = 'https://your-project.supabase.co';  // This should be replaced with actual URL
-const supabaseKey = 'your-anon-key';  // This should be replaced with actual key
 
 export interface StoredMeasurement extends WifiMeasurement {
   id: string;
@@ -12,16 +9,9 @@ export interface StoredMeasurement extends WifiMeasurement {
 }
 
 class SupabaseService {
-  private supabase;
-
-  constructor() {
-    // Using placeholder values until proper credentials are provided
-    this.supabase = createClient('https://placeholder.supabase.co', 'placeholder-key');
-  }
-
   async storeMeasurement(measurement: WifiMeasurement, locationName: string, clientId: string): Promise<StoredMeasurement | null> {
     try {
-      const { data, error } = await this.supabase
+      const { data, error } = await supabase
         .from('measurements')
         .insert([{
           signal_strength: measurement.signalStrength,
@@ -49,7 +39,7 @@ class SupabaseService {
 
   async getMeasurementsByClient(clientId: string): Promise<StoredMeasurement[]> {
     try {
-      const { data, error } = await this.supabase
+      const { data, error } = await supabase
         .from('measurements')
         .select('*')
         .eq('client_id', clientId)
