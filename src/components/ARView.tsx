@@ -2,14 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import { WifiMetrics } from "./WifiMetrics";
 import { Toolbar } from "./Toolbar";
 import { ComparisonView } from "./ComparisonView";
-import { ReportGenerator } from "./ReportGenerator";
 import { ClientInfoForm } from "./ClientInfoForm";
 import arService from "@/services/arService";
 import wifiService from "@/services/wifiService";
 import supabaseService from "@/services/supabaseService";
 import { toast } from "sonner";
 import * as THREE from "three";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Settings } from "lucide-react";
 
 interface ClientInfo {
@@ -31,15 +30,21 @@ export function ARView() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (clientInfo) {
+    if (clientInfo && containerRef.current) {
       setupCamera();
+      containerRef.current.appendChild(arService.getRenderer().domElement);
+      containerRef.current.appendChild(arService.getLabelRenderer().domElement);
     }
   }, [clientInfo]);
 
   async function setupCamera() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
+        video: { 
+          facingMode: "environment",
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        }
       });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -47,18 +52,20 @@ export function ARView() {
       }
     } catch (err) {
       console.error("Error accessing camera:", err);
-      toast.error("No se pudo acceder a la cámara");
+      toast.error("No se pudo acceder a la cámara", {
+        position: "top-left",
+      });
     }
   }
 
   useEffect(() => {
-    if (containerRef.current) {
-      containerRef.current.appendChild(arService.getRenderer().domElement);
-    }
-
     function animate() {
       requestAnimationFrame(animate);
-      arService.render();
+      if (containerRef.current) {
+        const distance = 5; // This could be calculated based on device motion/orientation
+        arService.updateMarkersScale(distance);
+        arService.render();
+      }
     }
     animate();
 
@@ -72,12 +79,15 @@ export function ARView() {
 
   const handleMeasure = async () => {
     if (!clientInfo) {
-      toast.error("Por favor, ingrese la información del cliente primero");
+      toast.error("Por favor, ingrese la información del cliente primero", {
+        position: "top-left",
+      });
       return;
     }
 
     const measurement = await wifiService.measureWifiQuality();
 
+    // Create marker at a random position in front of the camera
     const position = new THREE.Vector3(
       Math.random() * 4 - 2,
       Math.random() * 4 - 2,
@@ -93,12 +103,16 @@ export function ARView() {
       clientInfo
     );
 
-    toast.success("¡Medición tomada y almacenada!");
+    toast.success("¡Medición tomada y almacenada!", {
+      position: "top-left",
+    });
   };
 
   const handleClientInfoSubmit = (info: ClientInfo) => {
     setClientInfo(info);
-    toast.success("Información del cliente registrada");
+    toast.success("Información del cliente registrada", {
+      position: "top-left",
+    });
   };
 
   if (!clientInfo) {
@@ -123,13 +137,13 @@ export function ARView() {
       <WifiMetrics measurements={wifiService.filterMeasurements(signalThreshold)} />
 
       {showComparison && (
-        <div className="fixed top-4 left-4 right-4 max-h-[60vh] overflow-auto bg-white/90 backdrop-blur-sm rounded-lg shadow-lg">
+        <div className="fixed top-20 left-4 right-4 max-h-[60vh] overflow-auto bg-white/90 backdrop-blur-sm rounded-lg shadow-lg">
           <ComparisonView measurements={wifiService.getMeasurements()} />
         </div>
       )}
 
       <button
-        onClick={() => navigate("/reports", { state: { from: location.pathname } })}
+        onClick={() => navigate("/reports")}
         className="fixed top-4 right-4 bg-primary hover:bg-primary/90 text-white p-3 rounded-lg shadow-lg flex items-center gap-2"
       >
         <Settings className="w-5 h-5" />
