@@ -1,10 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { FileText, Share2, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export default function Reports() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state as any)?.from || "/";
 
   const handleGenerateReport = () => {
     toast.success("¡Reporte generado exitosamente!");
@@ -19,7 +21,7 @@ export default function Reports() {
       <div className="max-w-lg mx-auto space-y-6">
         <Button
           variant="outline"
-          onClick={() => navigate("/")}
+          onClick={() => navigate(from)}
           className="mb-6"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />

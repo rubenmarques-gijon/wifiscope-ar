@@ -70,7 +70,7 @@ export function ClientInfoForm({ onSubmit }: ClientInfoFormProps) {
                 <SelectTrigger className="w-full bg-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-white shadow-xl border">
+                <SelectContent className="bg-white/95 backdrop-blur-sm border shadow-lg">
                   <SelectItem value="dni">DNI</SelectItem>
                   <SelectItem value="nie">NIE</SelectItem>
                   <SelectItem value="passport">Pasaporte</SelectItem>
@@ -152,7 +152,7 @@ export function ClientInfoForm({ onSubmit }: ClientInfoFormProps) {
               <SelectTrigger className="w-full bg-white">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-white shadow-xl border">
+              <SelectContent className="bg-white/95 backdrop-blur-sm border shadow-lg">
                 <SelectItem value="installation">Instalación</SelectItem>
                 <SelectItem value="repair">Avería</SelectItem>
               </SelectContent>

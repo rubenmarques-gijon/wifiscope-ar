@@ -9,7 +9,8 @@ import wifiService from "@/services/wifiService";
 import supabaseService from "@/services/supabaseService";
 import { toast } from "sonner";
 import * as THREE from "three";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Settings } from "lucide-react";
 
 interface ClientInfo {
   documentType: string;
@@ -128,9 +129,10 @@ export function ARView() {
       )}
 
       <button
-        onClick={() => navigate("/reports")}
-        className="fixed top-4 right-4 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2"
+        onClick={() => navigate("/reports", { state: { from: location.pathname } })}
+        className="fixed top-4 right-4 bg-primary hover:bg-primary/90 text-white p-3 rounded-lg shadow-lg flex items-center gap-2"
       >
+        <Settings className="w-5 h-5" />
         <span className="hidden md:inline">Gestionar Informes</span>
       </button>
 

@@ -11,12 +11,10 @@ export function WifiMetrics({ measurements }: WifiMetricsProps) {
   const [realtimeMeasurement, setRealtimeMeasurement] = useState<WifiMeasurement | null>(null);
 
   useEffect(() => {
-    // Subscribe to real-time updates
     const unsubscribe = wifiService.subscribe((measurement) => {
       setRealtimeMeasurement(measurement);
     });
 
-    // Cleanup subscription on unmount
     return () => {
       unsubscribe();
     };
@@ -40,7 +38,6 @@ export function WifiMetrics({ measurements }: WifiMetricsProps) {
     return "error";
   };
 
-  // Use realtime measurement if available, otherwise use average from measurements
   const currentMeasurement = realtimeMeasurement || (measurements.length > 0 ? measurements[measurements.length - 1] : null);
 
   if (!currentMeasurement) {
@@ -48,28 +45,28 @@ export function WifiMetrics({ measurements }: WifiMetricsProps) {
   }
 
   return (
-    <div className="fixed bottom-24 left-0 right-0 p-4 overflow-x-auto">
-      <div className="flex gap-4 max-w-screen-lg mx-auto">
+    <div className="fixed bottom-28 left-0 right-0 p-4 overflow-x-auto md:bottom-24">
+      <div className="flex gap-6 max-w-screen-lg mx-auto justify-center">
         <MetricCard
           label="Señal WiFi"
           value={Math.round(currentMeasurement.signalStrength)}
           unit="dBm"
           status={getSignalStatus(currentMeasurement.signalStrength)}
-          className="flex-1"
+          className="min-w-[120px] md:flex-1"
         />
         <MetricCard
           label="Velocidad"
           value={Math.round(currentMeasurement.speed)}
           unit="Mbps"
           status={getSpeedStatus(currentMeasurement.speed)}
-          className="flex-1"
+          className="min-w-[120px] md:flex-1"
         />
         <MetricCard
           label="Latencia"
           value={Math.round(currentMeasurement.latency)}
           unit="ms"
           status={getLatencyStatus(currentMeasurement.latency)}
-          className="flex-1"
+          className="min-w-[120px] md:flex-1"
         />
       </div>
     </div>
