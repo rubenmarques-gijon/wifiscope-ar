@@ -1,5 +1,6 @@
 import { WifiMeasurement } from "@/types/wifi";
 import connectionMonitor from "./connectionMonitor";
+import { supabase } from "@/integrations/supabase/client";
 
 class MeasurementService {
   private measurements: WifiMeasurement[] = [];
@@ -13,7 +14,8 @@ class MeasurementService {
   private async getRealWifiMeasurement(): Promise<WifiMeasurement> {
     try {
       const startTime = performance.now();
-      await fetch('https://www.google.com/favicon.ico');
+      // Use Supabase health check instead of Google favicon
+      await supabase.from('measurements').select('count').limit(1);
       const latency = performance.now() - startTime;
 
       const connection = connectionMonitor.getConnection();

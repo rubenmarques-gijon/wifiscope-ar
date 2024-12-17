@@ -26,3 +26,19 @@ export interface NetworkConnection extends EventTarget {
   saveData?: boolean;
   onchange?: () => void;
 }
+
+export interface StoredMeasurement {
+  id: string;
+  signal_strength: number;
+  speed: number;
+  latency: number;
+  location: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  timestamp: number;
+  client_id: string;
+  location_name: string;
+  created_at: string;
+}

@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { WifiMeasurement } from '@/types/wifi';
+import { WifiMeasurement, StoredMeasurement } from '@/types/wifi';
 import { Database } from '@/integrations/supabase/types';
 
 interface ClientInfo {
@@ -9,13 +9,6 @@ interface ClientInfo {
   subscriberNumber: string;
   orderNumber: string;
   serviceType: string;
-}
-
-export interface StoredMeasurement extends WifiMeasurement {
-  id: string;
-  client_id: string;
-  location_name: string;
-  created_at: string;
 }
 
 class SupabaseService {
@@ -53,14 +46,10 @@ class SupabaseService {
 
       return {
         id: data.id,
-        signalStrength: data.signal_strength,
+        signal_strength: data.signal_strength,
         speed: data.speed,
         latency: data.latency,
-        location: {
-          x: (data.location as any).x || 0,
-          y: (data.location as any).y || 0,
-          z: (data.location as any).z || 0
-        },
+        location: data.location as { x: number; y: number; z: number },
         timestamp: data.timestamp,
         client_id: data.client_id,
         location_name: data.location_name,
@@ -87,14 +76,10 @@ class SupabaseService {
 
       return (data || []).map(record => ({
         id: record.id,
-        signalStrength: record.signal_strength,
+        signal_strength: record.signal_strength,
         speed: record.speed,
         latency: record.latency,
-        location: {
-          x: (record.location as any).x || 0,
-          y: (record.location as any).y || 0,
-          z: (record.location as any).z || 0
-        },
+        location: record.location as { x: number; y: number; z: number },
         timestamp: record.timestamp,
         client_id: record.client_id,
         location_name: record.location_name,
