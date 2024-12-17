@@ -14,14 +14,21 @@ class MeasurementService {
   private async getRealWifiMeasurement(): Promise<WifiMeasurement> {
     try {
       const startTime = performance.now();
-      // Use Supabase health check instead of Google favicon
+      // Use Supabase health check for latency measurement
       await supabase.from('measurements').select('count').limit(1);
       const latency = performance.now() - startTime;
 
       const connection = connectionMonitor.getConnection();
       
+      // Enhanced signal strength calculation based on connection quality
+      let signalStrength = -65; // Default value
+      if (connection) {
+        const downlinkQuality = connection.downlink || 0;
+        signalStrength = this.calculateSignalStrength(downlinkQuality);
+      }
+
       const measurement: WifiMeasurement = {
-        signalStrength: connection?.downlink ? -(100 - connection.downlink * 5) : -65,
+        signalStrength,
         speed: connection?.downlink || 0,
         latency: Math.round(latency),
         timestamp: Date.now(),
@@ -33,6 +40,19 @@ class MeasurementService {
       console.error('Error getting WiFi measurement:', error);
       throw error;
     }
+  }
+
+  private calculateSignalStrength(downlinkQuality: number): number {
+    // Convert downlink speed to approximate signal strength
+    // Higher downlink = better signal strength
+    const minSignal = -90; // Worst signal strength
+    const maxSignal = -30; // Best signal strength
+    const signalRange = maxSignal - minSignal;
+    
+    // Normalize downlink quality (assuming max speed of 100Mbps)
+    const normalizedQuality = Math.min(downlinkQuality / 100, 1);
+    
+    return minSignal + (signalRange * normalizedQuality);
   }
 
   private startRealTimeUpdates(): void {

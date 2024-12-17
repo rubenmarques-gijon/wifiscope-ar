@@ -46,12 +46,13 @@ class WifiService {
 
     try {
       const connection = connectionMonitor.getConnection();
+      const networkInfo = await this.getNetworkInfo();
       
       return {
-        ssid: await this.getSSID(),
-        protocol: connection?.effectiveType === '4g' ? 'Wi-Fi 5 (802.11ac)' : 'Wi-Fi 4 (802.11n)',
-        band: connection?.downlinkMax && connection.downlinkMax > 100 ? "5 GHz" : "2.4 GHz",
-        speed: `${connection?.downlink || 0}/${connection?.downlinkMax || 'N/A'} (Mbps)`,
+        ssid: networkInfo.ssid,
+        protocol: this.getWiFiProtocol(connection),
+        band: this.getWiFiBand(connection),
+        speed: this.getConnectionSpeed(connection),
       };
     } catch (error) {
       console.error('Error getting adapter info:', error);
@@ -59,19 +60,53 @@ class WifiService {
     }
   }
 
-  private async getSSID(): Promise<string> {
+  private async getNetworkInfo(): Promise<{ ssid: string }> {
     try {
       // @ts-ignore
       if (navigator.wifi && navigator.wifi.getCurrentNetwork) {
         // @ts-ignore
         const network = await navigator.wifi.getCurrentNetwork();
-        return network.ssid;
+        return { ssid: network.ssid };
       }
-      return "Red WiFi actual";
+
+      // Fallback for browsers that don't support WiFi API
+      const connection = connectionMonitor.getConnection();
+      if (connection) {
+        return {
+          ssid: 'Red WiFi actual'
+        };
+      }
+
+      throw new Error('No se puede obtener información de la red WiFi');
     } catch (error) {
-      console.error('Error getting SSID:', error);
-      return "Desconocido";
+      console.error('Error getting network info:', error);
+      return { ssid: 'Desconocido' };
     }
+  }
+
+  private getWiFiProtocol(connection: any): string {
+    if (!connection) return 'Desconocido';
+    
+    switch (connection.effectiveType) {
+      case '4g':
+        return 'Wi-Fi 6 (802.11ax)';
+      case '3g':
+        return 'Wi-Fi 5 (802.11ac)';
+      default:
+        return 'Wi-Fi 4 (802.11n)';
+    }
+  }
+
+  private getWiFiBand(connection: any): string {
+    if (!connection) return 'Desconocido';
+    return connection.downlinkMax && connection.downlinkMax > 100 ? "5 GHz" : "2.4 GHz";
+  }
+
+  private getConnectionSpeed(connection: any): string {
+    if (!connection) return 'Desconocido';
+    const downlink = connection.downlink || 0;
+    const downlinkMax = connection.downlinkMax || 'N/A';
+    return `${downlink}/${downlinkMax} (Mbps)`;
   }
 
   public cleanup(): void {
