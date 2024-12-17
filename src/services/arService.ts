@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { WifiMeasurement } from '@/types/wifi';
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
+import { DeviceOrientationControls } from 'three/examples/jsm/controls/DeviceOrientationControls.js';
 
 class ARService {
   private scene: THREE.Scene;
@@ -8,10 +9,9 @@ class ARService {
   private renderer: THREE.WebGLRenderer;
   private labelRenderer: CSS2DRenderer;
   private markers: Map<string, { mesh: THREE.Object3D; label: CSS2DObject }>;
-  private cameraControls: { 
-    position: THREE.Vector3;
-    rotation: THREE.Euler;
-  };
+  private controls: DeviceOrientationControls | null;
+  private raycaster: THREE.Raycaster;
+  private mouse: THREE.Vector2;
 
   constructor() {
     this.scene = new THREE.Scene();
@@ -22,10 +22,9 @@ class ARService {
     });
     this.labelRenderer = new CSS2DRenderer();
     this.markers = new Map();
-    this.cameraControls = {
-      position: new THREE.Vector3(),
-      rotation: new THREE.Euler()
-    };
+    this.controls = null;
+    this.raycaster = new THREE.Raycaster();
+    this.mouse = new THREE.Vector2();
 
     this.initializeAR();
   }
@@ -53,12 +52,15 @@ class ARService {
       
       // Initial camera position
       this.camera.position.z = 5;
-      this.camera.lookAt(0, 0, 0);
-
-      // Setup device orientation controls
+      
+      // Initialize device orientation controls
       if (typeof DeviceOrientationEvent !== 'undefined') {
-        window.addEventListener('deviceorientation', this.handleDeviceOrientation.bind(this));
+        this.controls = new DeviceOrientationControls(this.camera);
       }
+      
+      // Add event listeners for interaction
+      window.addEventListener('resize', this.handleResize.bind(this));
+      window.addEventListener('mousemove', this.handleMouseMove.bind(this));
       
       console.log('Enhanced AR initialized successfully');
     } catch (error) {
@@ -66,14 +68,20 @@ class ARService {
     }
   }
 
-  private handleDeviceOrientation(event: DeviceOrientationEvent) {
-    if (event.alpha && event.beta && event.gamma) {
-      const alpha = THREE.MathUtils.degToRad(event.alpha);
-      const beta = THREE.MathUtils.degToRad(event.beta);
-      const gamma = THREE.MathUtils.degToRad(event.gamma);
+  private handleResize() {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
 
-      this.camera.rotation.set(beta, alpha, -gamma);
-    }
+    this.camera.aspect = width / height;
+    this.camera.updateProjectionMatrix();
+
+    this.renderer.setSize(width, height);
+    this.labelRenderer.setSize(width, height);
+  }
+
+  private handleMouseMove(event: MouseEvent) {
+    this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
   }
 
   public addMeasurementMarker(position: THREE.Vector3, measurementData: WifiMeasurement): string {
@@ -123,15 +131,18 @@ class ARService {
   }
 
   private screenToWorld(screenPosition: THREE.Vector3): THREE.Vector3 {
-    const vector = new THREE.Vector3();
-    vector.set(
-      (screenPosition.x / window.innerWidth) * 2 - 1,
-      -(screenPosition.y / window.innerHeight) * 2 + 1,
-      -1
-    );
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+    const intersects = this.raycaster.intersectObjects(this.scene.children);
+    
+    if (intersects.length > 0) {
+      return intersects[0].point;
+    }
+    
+    // Fallback: project point at fixed distance
+    const vector = new THREE.Vector3(screenPosition.x, screenPosition.y, -1);
     vector.unproject(this.camera);
     const dir = vector.sub(this.camera.position).normalize();
-    const distance = -this.camera.position.z / dir.z;
+    const distance = 5; // Fixed distance from camera
     return this.camera.position.clone().add(dir.multiplyScalar(distance));
   }
 
@@ -149,6 +160,10 @@ class ARService {
 
   public render() {
     requestAnimationFrame(() => {
+      if (this.controls) {
+        this.controls.update();
+      }
+      
       this.updateMarkersOrientation();
       this.renderer.render(this.scene, this.camera);
       this.labelRenderer.render(this.scene, this.camera);
@@ -157,9 +172,13 @@ class ARService {
 
   private updateMarkersOrientation() {
     this.markers.forEach(({ mesh, label }) => {
-      // Make markers always face the camera
+      // Make markers and labels always face the camera
       mesh.quaternion.copy(this.camera.quaternion);
       label.quaternion.copy(this.camera.quaternion);
+      
+      // Update label position to follow marker
+      label.position.copy(mesh.position);
+      label.position.y += 0.2;
     });
   }
 
@@ -179,9 +198,13 @@ class ARService {
   }
 
   public cleanup() {
-    window.removeEventListener('deviceorientation', this.handleDeviceOrientation.bind(this));
+    window.removeEventListener('resize', this.handleResize.bind(this));
+    window.removeEventListener('mousemove', this.handleMouseMove.bind(this));
     this.markers.clear();
     this.scene.clear();
+    if (this.controls) {
+      this.controls.dispose();
+    }
   }
 }
 

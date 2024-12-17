@@ -45,68 +45,77 @@ class WifiService {
     }
 
     try {
-      const connection = connectionMonitor.getConnection();
-      const networkInfo = await this.getNetworkInfo();
-      
-      return {
-        ssid: networkInfo.ssid,
-        protocol: this.getWiFiProtocol(connection),
-        band: this.getWiFiBand(connection),
-        speed: this.getConnectionSpeed(connection),
+      const connection = (navigator as any).connection;
+      const networkInfo = {
+        ssid: await this.getNetworkSSID(),
+        protocol: this.getWiFiProtocol(),
+        band: this.getWiFiBand(),
+        speed: this.getConnectionSpeed(),
       };
+      
+      return networkInfo;
     } catch (error) {
       console.error('Error getting adapter info:', error);
       throw error;
     }
   }
 
-  private async getNetworkInfo(): Promise<{ ssid: string }> {
+  private async getNetworkSSID(): Promise<string> {
     try {
-      // @ts-ignore
-      if (navigator.wifi && navigator.wifi.getCurrentNetwork) {
-        // @ts-ignore
-        const network = await navigator.wifi.getCurrentNetwork();
-        return { ssid: network.ssid };
+      // Using modern browser APIs to get network info
+      if ('getNetworkInformation' in navigator) {
+        const networkInfo = await (navigator as any).getNetworkInformation();
+        return networkInfo?.ssid || 'Unknown SSID';
       }
-
-      // Fallback for browsers that don't support WiFi API
-      const connection = connectionMonitor.getConnection();
-      if (connection) {
-        return {
-          ssid: 'Red WiFi actual'
-        };
+      
+      // Fallback using connection type
+      const connection = (navigator as any).connection;
+      if (connection?.type === 'wifi') {
+        return 'WiFi Connected';
       }
-
-      throw new Error('No se puede obtener información de la red WiFi');
+      
+      return 'Unknown Network';
     } catch (error) {
-      console.error('Error getting network info:', error);
-      return { ssid: 'Desconocido' };
+      console.error('Error getting SSID:', error);
+      return 'Unknown Network';
     }
   }
 
-  private getWiFiProtocol(connection: any): string {
-    if (!connection) return 'Desconocido';
+  private getWiFiProtocol(): string {
+    const connection = (navigator as any).connection;
     
-    switch (connection.effectiveType) {
-      case '4g':
-        return 'Wi-Fi 6 (802.11ax)';
-      case '3g':
-        return 'Wi-Fi 5 (802.11ac)';
-      default:
-        return 'Wi-Fi 4 (802.11n)';
+    if (!connection) return 'Unknown';
+    
+    // Estimate protocol based on connection capabilities
+    if (connection.downlinkMax >= 1000) {
+      return 'Wi-Fi 6 (802.11ax)';
+    } else if (connection.downlinkMax >= 500) {
+      return 'Wi-Fi 5 (802.11ac)';
+    } else if (connection.downlinkMax >= 150) {
+      return 'Wi-Fi 4 (802.11n)';
     }
+    
+    return 'Wi-Fi Legacy';
   }
 
-  private getWiFiBand(connection: any): string {
-    if (!connection) return 'Desconocido';
-    return connection.downlinkMax && connection.downlinkMax > 100 ? "5 GHz" : "2.4 GHz";
+  private getWiFiBand(): string {
+    const connection = (navigator as any).connection;
+    
+    if (!connection) return 'Unknown';
+    
+    // Estimate band based on connection speed
+    return connection.downlinkMax >= 300 ? "5 GHz" : "2.4 GHz";
   }
 
-  private getConnectionSpeed(connection: any): string {
-    if (!connection) return 'Desconocido';
+  private getConnectionSpeed(): string {
+    const connection = (navigator as any).connection;
+    
+    if (!connection) return 'Unknown';
+    
     const downlink = connection.downlink || 0;
-    const downlinkMax = connection.downlinkMax || 'N/A';
-    return `${downlink}/${downlinkMax} (Mbps)`;
+    const downlinkMax = connection.downlinkMax || 0;
+    
+    return `${downlink}/${downlinkMax} Mbps`;
   }
 
   public cleanup(): void {

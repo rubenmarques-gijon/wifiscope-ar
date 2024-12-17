@@ -14,22 +14,25 @@ class MeasurementService {
   private async getRealWifiMeasurement(): Promise<WifiMeasurement> {
     try {
       const startTime = performance.now();
+      
       // Use Supabase health check for latency measurement
       await supabase.from('measurements').select('count').limit(1);
       const latency = performance.now() - startTime;
 
-      const connection = connectionMonitor.getConnection();
+      const connection = (navigator as any).connection;
       
-      // Enhanced signal strength calculation based on connection quality
+      // Enhanced signal strength calculation
       let signalStrength = -65; // Default value
       if (connection) {
-        const downlinkQuality = connection.downlink || 0;
-        signalStrength = this.calculateSignalStrength(downlinkQuality);
+        signalStrength = this.calculateSignalStrength(connection);
       }
+
+      // Get more accurate speed measurements
+      const speed = await this.measureConnectionSpeed();
 
       const measurement: WifiMeasurement = {
         signalStrength,
-        speed: connection?.downlink || 0,
+        speed,
         latency: Math.round(latency),
         timestamp: Date.now(),
         location: { x: 0, y: 0, z: 0 }
@@ -42,17 +45,56 @@ class MeasurementService {
     }
   }
 
-  private calculateSignalStrength(downlinkQuality: number): number {
-    // Convert downlink speed to approximate signal strength
-    // Higher downlink = better signal strength
-    const minSignal = -90; // Worst signal strength
-    const maxSignal = -30; // Best signal strength
-    const signalRange = maxSignal - minSignal;
+  private calculateSignalStrength(connection: any): number {
+    // Calculate signal strength based on connection quality
+    const effectiveType = connection.effectiveType || '4g';
+    const downlink = connection.downlink || 0;
     
-    // Normalize downlink quality (assuming max speed of 100Mbps)
-    const normalizedQuality = Math.min(downlinkQuality / 100, 1);
+    // Base signal strength on connection type and speed
+    let baseSignal = -65;
     
-    return minSignal + (signalRange * normalizedQuality);
+    switch (effectiveType) {
+      case '4g':
+        baseSignal = -50;
+        break;
+      case '3g':
+        baseSignal = -70;
+        break;
+      case '2g':
+        baseSignal = -85;
+        break;
+      case 'slow-2g':
+        baseSignal = -95;
+        break;
+    }
+    
+    // Adjust based on downlink speed
+    const speedAdjustment = Math.min(15, Math.floor(downlink / 10) * 2);
+    return baseSignal + speedAdjustment;
+  }
+
+  private async measureConnectionSpeed(): Promise<number> {
+    try {
+      const connection = (navigator as any).connection;
+      if (connection && connection.downlink) {
+        return connection.downlink;
+      }
+      
+      // Fallback: estimate speed using small download
+      const startTime = performance.now();
+      const response = await fetch('https://www.cloudflare.com/cdn-cgi/trace');
+      const endTime = performance.now();
+      
+      const duration = (endTime - startTime) / 1000; // Convert to seconds
+      const bytes = (await response.text()).length;
+      const bitsPerSecond = (bytes * 8) / duration;
+      const megabitsPerSecond = bitsPerSecond / 1000000;
+      
+      return Math.round(megabitsPerSecond * 100) / 100;
+    } catch (error) {
+      console.error('Error measuring connection speed:', error);
+      return 0;
+    }
   }
 
   private startRealTimeUpdates(): void {
