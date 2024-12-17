@@ -1,15 +1,21 @@
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useState } from "react";
-import { Camera, Gauge, Settings, Wifi } from "lucide-react";
+import { Camera, Gauge, Settings, Wifi, BarChart2 } from "lucide-react";
 
 interface ToolbarProps {
   onMeasure: () => void;
   onToggleAR: () => void;
   onFilterChange: (value: number) => void;
+  onToggleComparison: () => void;
 }
 
-export function Toolbar({ onMeasure, onToggleAR, onFilterChange }: ToolbarProps) {
+export function Toolbar({ 
+  onMeasure, 
+  onToggleAR, 
+  onFilterChange,
+  onToggleComparison 
+}: ToolbarProps) {
   const [signalThreshold, setSignalThreshold] = useState([-70]);
 
   return (
@@ -22,6 +28,10 @@ export function Toolbar({ onMeasure, onToggleAR, onFilterChange }: ToolbarProps)
         <Button variant="default" size="lg" onClick={onMeasure}>
           <Gauge className="mr-2 h-4 w-4" />
           Measure Here
+        </Button>
+        <Button variant="outline" size="lg" onClick={onToggleComparison}>
+          <BarChart2 className="mr-2 h-4 w-4" />
+          Compare
         </Button>
       </div>
       

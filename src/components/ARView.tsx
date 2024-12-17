@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { WifiMetrics } from "./WifiMetrics";
 import { Toolbar } from "./Toolbar";
+import { ComparisonView } from "./ComparisonView";
+import { ReportGenerator } from "./ReportGenerator";
 import arService from "@/services/arService";
 import wifiService from "@/services/wifiService";
+import supabaseService from "@/services/supabaseService";
 import { toast } from "sonner";
 import * as THREE from "three";
 
@@ -11,6 +14,7 @@ export function ARView() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isAREnabled, setIsAREnabled] = useState(true);
   const [signalThreshold, setSignalThreshold] = useState(-70);
+  const [showComparison, setShowComparison] = useState(false);
 
   useEffect(() => {
     async function setupCamera() {
@@ -33,7 +37,6 @@ export function ARView() {
 
     setupCamera();
 
-    // Animation loop
     function animate() {
       requestAnimationFrame(animate);
       arService.render();
@@ -59,7 +62,15 @@ export function ARView() {
     );
     
     arService.addMeasurementMarker(position, measurement);
-    toast.success("Measurement taken!");
+
+    // Store measurement in Supabase
+    await supabaseService.storeMeasurement(
+      measurement,
+      "Room " + (wifiService.getMeasurements().length + 1),
+      "demo-client"
+    );
+
+    toast.success("Measurement taken and stored!");
   };
 
   const handleToggleAR = () => {
@@ -68,6 +79,18 @@ export function ARView() {
 
   const handleFilterChange = (value: number) => {
     setSignalThreshold(value);
+  };
+
+  const handleGenerateReport = async () => {
+    // In a real app, this would generate a PDF report
+    console.log("Generating report...");
+    toast.success("Report generated successfully!");
+  };
+
+  const handleShareReport = async () => {
+    // In a real app, this would share the report
+    console.log("Sharing report...");
+    toast.success("Report shared successfully!");
   };
 
   return (
@@ -83,10 +106,25 @@ export function ARView() {
         measurements={wifiService.filterMeasurements(signalThreshold)}
       />
       
+      {showComparison && (
+        <div className="absolute top-4 left-4 right-4">
+          <ComparisonView 
+            measurements={wifiService.getMeasurements()}
+          />
+        </div>
+      )}
+
+      <ReportGenerator
+        measurements={wifiService.getMeasurements()}
+        onGenerateReport={handleGenerateReport}
+        onShareReport={handleShareReport}
+      />
+      
       <Toolbar
         onMeasure={handleMeasure}
         onToggleAR={handleToggleAR}
         onFilterChange={handleFilterChange}
+        onToggleComparison={() => setShowComparison(prev => !prev)}
       />
     </div>
   );
