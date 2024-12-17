@@ -1,31 +1,19 @@
-import { useEffect, useState } from "react";
+import { WifiMeasurement } from "@/services/wifiService";
 import { MetricCard } from "./MetricCard";
 
-interface WifiMetrics {
-  signalStrength: number; // dBm
-  speed: number; // Mbps
-  latency: number; // ms
+interface WifiMetricsProps {
+  measurements: WifiMeasurement[];
 }
 
-export function WifiMetrics() {
-  const [metrics, setMetrics] = useState<WifiMetrics>({
-    signalStrength: -65,
-    speed: 100,
-    latency: 15
-  });
-
-  // Simulated metrics update
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setMetrics(prev => ({
-        signalStrength: prev.signalStrength + (Math.random() - 0.5) * 5,
-        speed: prev.speed + (Math.random() - 0.5) * 10,
-        latency: prev.latency + (Math.random() - 0.5) * 5
-      }));
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
+export function WifiMetrics({ measurements }: WifiMetricsProps) {
+  const getAverageMetric = (metric: keyof WifiMeasurement): number => {
+    if (measurements.length === 0) return 0;
+    const sum = measurements.reduce((acc, m) => {
+      const value = m[metric];
+      return acc + (typeof value === 'number' ? value : 0);
+    }, 0);
+    return sum / measurements.length;
+  };
 
   const getSignalStatus = (dBm: number) => {
     if (dBm >= -67) return "good";
@@ -45,25 +33,29 @@ export function WifiMetrics() {
     return "error";
   };
 
+  const avgSignal = getAverageMetric('signalStrength');
+  const avgSpeed = getAverageMetric('speed');
+  const avgLatency = getAverageMetric('latency');
+
   return (
-    <div className="absolute bottom-0 left-0 right-0 p-4 flex gap-4 overflow-x-auto">
+    <div className="absolute bottom-24 left-0 right-0 p-4 flex gap-4 overflow-x-auto">
       <MetricCard
         label="Señal WiFi"
-        value={Math.round(metrics.signalStrength)}
+        value={Math.round(avgSignal)}
         unit="dBm"
-        status={getSignalStatus(metrics.signalStrength)}
+        status={getSignalStatus(avgSignal)}
       />
       <MetricCard
         label="Velocidad"
-        value={Math.round(metrics.speed)}
+        value={Math.round(avgSpeed)}
         unit="Mbps"
-        status={getSpeedStatus(metrics.speed)}
+        status={getSpeedStatus(avgSpeed)}
       />
       <MetricCard
         label="Latencia"
-        value={Math.round(metrics.latency)}
+        value={Math.round(avgLatency)}
         unit="ms"
-        status={getLatencyStatus(metrics.latency)}
+        status={getLatencyStatus(avgLatency)}
       />
     </div>
   );
