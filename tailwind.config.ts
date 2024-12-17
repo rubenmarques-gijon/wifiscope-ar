@@ -28,18 +28,6 @@ export default {
           DEFAULT: "#0066CC",
           foreground: "#FFFFFF",
         },
-        secondary: {
-          DEFAULT: "#34D399", // Verde esmeralda para buena señal
-          foreground: "#FFFFFF",
-        },
-        warning: {
-          DEFAULT: "#FBBF24", // Amarillo ámbar para advertencia
-          foreground: "#000000",
-        },
-        error: {
-          DEFAULT: "#DC2626", // Rojo para error
-          foreground: "#FFFFFF",
-        },
         muted: {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
