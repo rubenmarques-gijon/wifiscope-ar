@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { WifiMeasurement } from './wifiService';
-import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer';
+import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 
 class ARService {
   private scene: THREE.Scene;
@@ -12,7 +12,10 @@ class ARService {
   constructor() {
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    this.renderer = new THREE.WebGLRenderer({ alpha: true });
+    this.renderer = new THREE.WebGLRenderer({ 
+      alpha: true,
+      antialias: true 
+    });
     this.labelRenderer = new CSS2DRenderer();
     this.markers = new Map();
 
@@ -21,46 +24,52 @@ class ARService {
 
   private async initializeAR() {
     try {
-      // Set up AR scene
+      // Set up AR scene with improved settings
       this.renderer.setSize(window.innerWidth, window.innerHeight);
-      this.renderer.setPixelRatio(window.devicePixelRatio);
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      this.renderer.outputColorSpace = THREE.SRGBColorSpace;
       
-      // Set up label renderer
+      // Enhanced label renderer setup
       this.labelRenderer.setSize(window.innerWidth, window.innerHeight);
       this.labelRenderer.domElement.style.position = 'absolute';
       this.labelRenderer.domElement.style.top = '0';
+      this.labelRenderer.domElement.style.left = '0';
       this.labelRenderer.domElement.style.pointerEvents = 'none';
       
-      // Add lights
-      const ambientLight = new THREE.AmbientLight(0x404040);
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+      // Improved lighting setup
+      const ambientLight = new THREE.AmbientLight(0x404040, 1.5);
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
       directionalLight.position.set(1, 1, 1);
       
       this.scene.add(ambientLight);
       this.scene.add(directionalLight);
       
-      // Position camera
+      // Position camera with better initial view
       this.camera.position.z = 5;
+      this.camera.lookAt(0, 0, 0);
       
-      console.log('AR initialized successfully');
+      console.log('AR initialized successfully with enhanced settings');
     } catch (error) {
       console.error('Error initializing AR:', error);
     }
   }
 
-  public addMeasurementMarker(position: THREE.Vector3, measurementData: WifiMeasurement) {
-    // Create marker mesh
-    const markerGeometry = new THREE.SphereGeometry(0.15);
+  public addMeasurementMarker(position: THREE.Vector3, measurementData: WifiMeasurement): string {
+    // Create marker mesh with improved visual quality
+    const markerGeometry = new THREE.SphereGeometry(0.15, 32, 32);
     const markerMaterial = new THREE.MeshPhongMaterial({ 
       color: this.getColorForSignalStrength(measurementData.signalStrength),
       transparent: true,
-      opacity: 0.8
+      opacity: 0.8,
+      shininess: 100
     });
     
     const marker = new THREE.Mesh(markerGeometry, markerMaterial);
     marker.position.copy(position);
+    marker.castShadow = true;
+    marker.receiveShadow = true;
 
-    // Create label
+    // Enhanced label styling
     const labelDiv = document.createElement('div');
     labelDiv.className = 'ar-label';
     labelDiv.textContent = `${Math.round(measurementData.signalStrength)} dBm`;
@@ -72,10 +81,11 @@ class ARService {
     labelDiv.style.fontWeight = 'bold';
     labelDiv.style.textAlign = 'center';
     labelDiv.style.whiteSpace = 'nowrap';
+    labelDiv.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
     
     const label = new CSS2DObject(labelDiv);
     label.position.copy(position);
-    label.position.y += 0.2; // Position label slightly above marker
+    label.position.y += 0.2;
     
     const markerId = `marker-${Date.now()}`;
     this.markers.set(markerId, { mesh: marker, label });
