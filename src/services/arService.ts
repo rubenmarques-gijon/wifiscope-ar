@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { WifiMeasurement } from './wifiService';
 
 class ARService {
   private scene: THREE.Scene;
