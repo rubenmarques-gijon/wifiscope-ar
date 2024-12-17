@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer';
+import { OrbitControls } from 'three/addons/controls/OrbitControls';
 import { ARServiceConfig } from './types';
 
 export class ARScene {
