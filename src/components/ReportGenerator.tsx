@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { WifiMeasurement } from "@/services/wifiService";
-import { FileText, Mail, Share2 } from "lucide-react";
+import { FileText, Share2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface ReportGeneratorProps {
@@ -9,37 +9,41 @@ interface ReportGeneratorProps {
   onShareReport: () => void;
 }
 
-export function ReportGenerator({ measurements, onGenerateReport, onShareReport }: ReportGeneratorProps) {
+export function ReportGenerator({
+  measurements,
+  onGenerateReport,
+  onShareReport,
+}: ReportGeneratorProps) {
   const handleGenerateReport = () => {
     onGenerateReport();
-    toast.success("Report generated successfully!");
+    toast.success("¡Reporte generado exitosamente!");
   };
 
   const handleShareReport = () => {
     onShareReport();
-    toast.success("Report shared successfully!");
+    toast.success("¡Reporte compartido exitosamente!");
   };
 
   return (
-    <div className="fixed bottom-24 right-4 flex flex-col gap-2">
+    <div className="fixed bottom-24 right-4 flex flex-col gap-2 md:flex-row md:bottom-28 md:right-6">
       <Button
         variant="default"
         size="lg"
         onClick={handleGenerateReport}
-        className="flex items-center gap-2"
+        className="flex items-center gap-2 shadow-lg hover:shadow-xl transition-shadow"
       >
         <FileText className="w-4 h-4" />
-        Generate Report
+        Generar Reporte
       </Button>
-      
+
       <Button
         variant="outline"
         size="lg"
         onClick={handleShareReport}
-        className="flex items-center gap-2"
+        className="flex items-center gap-2 shadow-lg hover:shadow-xl transition-shadow"
       >
         <Share2 className="w-4 h-4" />
-        Share Report
+        Compartir Reporte
       </Button>
     </div>
   );

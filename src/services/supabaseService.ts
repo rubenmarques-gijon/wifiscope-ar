@@ -2,6 +2,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { WifiMeasurement } from './wifiService';
 import { Database } from '@/integrations/supabase/types';
 
+interface ClientInfo {
+  documentType: string;
+  documentNumber: string;
+  phone: string;
+  subscriberNumber: string;
+  orderNumber: string;
+  serviceType: string;
+}
+
 export interface StoredMeasurement extends WifiMeasurement {
   id: string;
   client_id: string;
@@ -10,7 +19,12 @@ export interface StoredMeasurement extends WifiMeasurement {
 }
 
 class SupabaseService {
-  async storeMeasurement(measurement: WifiMeasurement, locationName: string, clientId: string): Promise<StoredMeasurement | null> {
+  async storeMeasurement(
+    measurement: WifiMeasurement,
+    locationName: string,
+    clientId: string,
+    clientInfo: ClientInfo
+  ): Promise<StoredMeasurement | null> {
     try {
       const { data, error } = await supabase
         .from('measurements')
@@ -18,10 +32,20 @@ class SupabaseService {
           signal_strength: measurement.signalStrength,
           speed: measurement.speed,
           latency: measurement.latency,
-          location: measurement.location,
+          location: {
+            x: measurement.location.x,
+            y: measurement.location.y,
+            z: measurement.location.z
+          },
           timestamp: measurement.timestamp,
           location_name: locationName,
-          client_id: clientId
+          client_id: clientId,
+          client_document_type: clientInfo.documentType,
+          client_document_number: clientInfo.documentNumber,
+          client_phone: clientInfo.phone,
+          subscriber_number: clientInfo.subscriberNumber,
+          order_number: clientInfo.orderNumber,
+          service_type: clientInfo.serviceType
         }])
         .select()
         .single();
@@ -31,7 +55,6 @@ class SupabaseService {
         return null;
       }
 
-      // Map the response back to our interface format and ensure location type
       return {
         id: data.id,
         signalStrength: data.signal_strength,
@@ -66,7 +89,6 @@ class SupabaseService {
         return [];
       }
 
-      // Map each database record to our interface format and ensure location type
       return (data || []).map(record => ({
         id: record.id,
         signalStrength: record.signal_strength,

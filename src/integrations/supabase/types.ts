@@ -11,36 +11,93 @@ export type Database = {
     Tables: {
       measurements: {
         Row: {
+          client_document_number: string | null
+          client_document_type: string | null
           client_id: string
+          client_phone: string | null
           created_at: string
+          description: string | null
+          dns_servers: string | null
+          driver_version: string | null
+          gateway: string | null
           id: string
+          ipv4_address: string | null
+          ipv6_address: string | null
           latency: number
+          link_speed: string | null
           location: Json
           location_name: string
+          mac_address: string | null
+          manufacturer: string | null
+          network_band: string | null
+          order_number: string | null
+          protocol: string | null
+          security_type: string | null
+          service_type: string | null
           signal_strength: number
           speed: number
+          ssid: string | null
+          subscriber_number: string | null
           timestamp: number
         }
         Insert: {
+          client_document_number?: string | null
+          client_document_type?: string | null
           client_id: string
+          client_phone?: string | null
           created_at?: string
+          description?: string | null
+          dns_servers?: string | null
+          driver_version?: string | null
+          gateway?: string | null
           id?: string
+          ipv4_address?: string | null
+          ipv6_address?: string | null
           latency: number
+          link_speed?: string | null
           location: Json
           location_name: string
+          mac_address?: string | null
+          manufacturer?: string | null
+          network_band?: string | null
+          order_number?: string | null
+          protocol?: string | null
+          security_type?: string | null
+          service_type?: string | null
           signal_strength: number
           speed: number
+          ssid?: string | null
+          subscriber_number?: string | null
           timestamp: number
         }
         Update: {
+          client_document_number?: string | null
+          client_document_type?: string | null
           client_id?: string
+          client_phone?: string | null
           created_at?: string
+          description?: string | null
+          dns_servers?: string | null
+          driver_version?: string | null
+          gateway?: string | null
           id?: string
+          ipv4_address?: string | null
+          ipv6_address?: string | null
           latency?: number
+          link_speed?: string | null
           location?: Json
           location_name?: string
+          mac_address?: string | null
+          manufacturer?: string | null
+          network_band?: string | null
+          order_number?: string | null
+          protocol?: string | null
+          security_type?: string | null
+          service_type?: string | null
           signal_strength?: number
           speed?: number
+          ssid?: string | null
+          subscriber_number?: string | null
           timestamp?: number
         }
         Relationships: []
