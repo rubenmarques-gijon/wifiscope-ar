@@ -25,6 +25,9 @@ class WifiService {
   }
 
   public async measureWifiQuality(): Promise<WifiMeasurement> {
+    if (!connectionMonitor.isConnected()) {
+      throw new Error("No hay conexión WiFi disponible");
+    }
     return measurementService.measureWifiQuality();
   }
 
@@ -46,9 +49,9 @@ class WifiService {
       
       return {
         ssid: await this.getSSID(),
-        protocol: connection.effectiveType === '4g' ? 'Wi-Fi 5 (802.11ac)' : 'Wi-Fi 4 (802.11n)',
-        band: connection.downlinkMax > 100 ? "5 GHz" : "2.4 GHz",
-        speed: `${connection.downlink}/${connection.downlinkMax || 'N/A'} (Mbps)`,
+        protocol: connection?.effectiveType === '4g' ? 'Wi-Fi 5 (802.11ac)' : 'Wi-Fi 4 (802.11n)',
+        band: connection?.downlinkMax && connection.downlinkMax > 100 ? "5 GHz" : "2.4 GHz",
+        speed: `${connection?.downlink || 0}/${connection?.downlinkMax || 'N/A'} (Mbps)`,
       };
     } catch (error) {
       console.error('Error getting adapter info:', error);

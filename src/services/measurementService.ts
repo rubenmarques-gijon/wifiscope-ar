@@ -19,7 +19,7 @@ class MeasurementService {
       const connection = connectionMonitor.getConnection();
       
       const measurement: WifiMeasurement = {
-        signalStrength: connection?.signalStrength || -65,
+        signalStrength: connection?.downlink ? -(100 - connection.downlink * 5) : -65,
         speed: connection?.downlink || 0,
         latency: Math.round(latency),
         timestamp: Date.now(),
